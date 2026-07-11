@@ -1,8 +1,8 @@
-/*
+.vixn-find {
+	padding: var(--size-4-2);
+	border-top: 1px solid var(--background-modifier-border);
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.vixn-find input {
+	width: 100%;
+}

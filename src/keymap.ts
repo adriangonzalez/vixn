@@ -6,13 +6,28 @@ export type VixnAction =
 	| 'open'
 	| 'first'
 	| 'last'
+	| 'collapseAll'
+	| 'expandAll'
+	| 'find'
+	| 'findNext'
+	| 'findPrev'
+	| 'newNote'
+	| 'rename'
+	| 'delete'
 	| 'focusEditor';
+
+/** Actions gated behind the "File operations" setting. */
+export const FILE_OP_ACTIONS: ReadonlySet<VixnAction> = new Set([
+	'newNote',
+	'rename',
+	'delete',
+]);
 
 const SEQUENCE_TIMEOUT_MS = 1000;
 
-/** Resolves key presses to actions, tracking the pending "g" of a gg sequence. */
+/** Resolves key presses to actions, tracking pending g/z key sequences. */
 export class KeySequencer {
-	private pendingG = false;
+	private pending: 'g' | 'z' | null = null;
 	private timer: number | null = null;
 
 	/**
@@ -20,10 +35,13 @@ export class KeySequencer {
 	 * sequence (consume it and wait for the next key), or null when unmapped.
 	 */
 	resolve(key: string): VixnAction | 'pending' | null {
-		if (this.pendingG) {
+		if (this.pending !== null) {
+			const pending = this.pending;
 			this.reset();
-			if (key === 'g') return 'first';
-			// The orphaned g is discarded; the new key is handled normally below.
+			if (pending === 'g' && key === 'g') return 'first';
+			if (pending === 'z' && key === 'M') return 'collapseAll';
+			if (pending === 'z' && key === 'R') return 'expandAll';
+			// The orphaned prefix is discarded; the new key is handled below.
 		}
 		switch (key) {
 			case 'j':
@@ -35,17 +53,26 @@ export class KeySequencer {
 			case 'l':
 				return 'expandOrOpen';
 			// Enter is deliberately unmapped: it falls through to the tree's
-			// native handler, which starts a rename.
+			// native handler (rename on macOS, open elsewhere).
 			case 'o':
 				return 'open';
 			case 'G':
 				return 'last';
+			case '/':
+				return 'find';
+			case 'n':
+				return 'findNext';
+			case 'N':
+				return 'findPrev';
+			case 'a':
+				return 'newNote';
+			case 'r':
+				return 'rename';
+			case 'd':
+				return 'delete';
 			case 'g':
-				this.pendingG = true;
-				this.timer = window.setTimeout(
-					() => this.reset(),
-					SEQUENCE_TIMEOUT_MS,
-				);
+			case 'z':
+				this.startSequence(key);
 				return 'pending';
 			case 'Escape':
 				return 'focusEditor';
@@ -54,8 +81,13 @@ export class KeySequencer {
 		}
 	}
 
+	private startSequence(key: 'g' | 'z'): void {
+		this.pending = key;
+		this.timer = window.setTimeout(() => this.reset(), SEQUENCE_TIMEOUT_MS);
+	}
+
 	reset(): void {
-		this.pendingG = false;
+		this.pending = null;
 		if (this.timer !== null) {
 			window.clearTimeout(this.timer);
 			this.timer = null;

@@ -1,4 +1,4 @@
-import { TAbstractFile, View } from 'obsidian';
+import { TAbstractFile, TFolder, View } from 'obsidian';
 
 /*
  * Hand-written interfaces for the undocumented file explorer internals.
@@ -10,11 +10,16 @@ import { TAbstractFile, View } from 'obsidian';
 export interface ExplorerItem {
 	file?: TAbstractFile;
 	selfEl?: HTMLElement;
+	parent?: ExplorerItem;
 	/** Present on folder items only. */
 	collapsed?: boolean;
 	/** Present on folder items only; children are in display order. */
 	vChildren?: {
 		children?: ExplorerItem[];
+	};
+	/** Layout state managed by the virtualized scroller. */
+	info?: {
+		hidden?: boolean;
 	};
 }
 
@@ -27,6 +32,14 @@ export interface ExplorerTree {
 	 * first-item / last-item jump (verified against the 1.x app bundle).
 	 */
 	root?: ExplorerItem;
+	setCollapseAll?: (collapsed: boolean) => void;
+	/** Bound view callback behind the native F2/Enter rename key. */
+	handleRenameFocusedItem?: (evt: KeyboardEvent) => void;
+	/**
+	 * Bound view callback behind the native delete key; prompts according
+	 * to the user's confirm-deletion setting and skips the vault root.
+	 */
+	handleDeleteSelectedItems?: (evt: KeyboardEvent) => void;
 }
 
 export interface ExplorerView extends View {
@@ -36,4 +49,13 @@ export interface ExplorerView extends View {
 	 * file's item, and scrolls it into view on the next frame.
 	 */
 	revealInFolder?: (file: TAbstractFile) => void;
+	/**
+	 * The explorer's own "new note/folder" flow: creates the file and, for
+	 * notes, opens it with the title selected for naming.
+	 */
+	createAbstractFile?: (
+		kind: 'file' | 'folder',
+		folder: TFolder | null,
+		newLeaf: boolean | string,
+	) => Promise<void>;
 }

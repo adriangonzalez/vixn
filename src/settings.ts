@@ -4,11 +4,13 @@ import VixnPlugin from './main';
 export interface VixnSettings {
 	enabled: boolean;
 	hJumpsToParent: boolean;
+	fileOps: boolean;
 }
 
 export const DEFAULT_SETTINGS: VixnSettings = {
 	enabled: true,
 	hJumpsToParent: true,
+	fileOps: true,
 };
 
 export class VixnSettingTab extends PluginSettingTab {
@@ -33,6 +35,20 @@ export class VixnSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.enabled)
 					.onChange(async (value) => {
 						this.plugin.settings.enabled = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		new Setting(containerEl)
+			.setName('File operations')
+			.setDesc(
+				'Enable creating (a), renaming (r), and deleting (d) from the file explorer. When off, those keys pass through untouched.',
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.fileOps)
+					.onChange(async (value) => {
+						this.plugin.settings.fileOps = value;
 						await this.plugin.saveSettings();
 					}),
 			);

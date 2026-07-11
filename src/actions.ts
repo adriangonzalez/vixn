@@ -1,7 +1,10 @@
 import { App } from 'obsidian';
 import { VixnAction } from './keymap';
 import { VixnSettings } from './settings';
+import { FindBar } from './find';
 import {
+	createNewNote,
+	deleteFocused,
 	focusEditor,
 	focusFirst,
 	focusLast,
@@ -9,19 +12,22 @@ import {
 	isExpandedFolder,
 	isFolderItem,
 	openFocusedFile,
+	renameFocused,
 	sendNavKey,
+	setAllCollapsed,
 } from './explorer';
 
 /**
  * Run a navigation action. Returns true when keyboard focus should stay
  * on the explorer tree afterwards (i.e. the action did not hand focus to
- * the editor).
+ * the editor, the find bar, a rename field, or a dialog).
  */
 export function runAction(
 	app: App,
 	settings: VixnSettings,
 	action: VixnAction,
 	target: EventTarget,
+	find: FindBar,
 ): boolean {
 	switch (action) {
 		case 'down':
@@ -43,6 +49,30 @@ export function runAction(
 		case 'last':
 			focusLast(app, target);
 			return true;
+		case 'collapseAll':
+			setAllCollapsed(app, true);
+			return true;
+		case 'expandAll':
+			setAllCollapsed(app, false);
+			return true;
+		case 'find':
+			find.open();
+			return false;
+		case 'findNext':
+			find.next('forwards');
+			return true;
+		case 'findPrev':
+			find.next('backwards');
+			return true;
+		case 'newNote':
+			createNewNote(app);
+			return false;
+		case 'rename':
+			renameFocused(app);
+			return false;
+		case 'delete':
+			deleteFocused(app);
+			return false;
 		case 'focusEditor':
 			focusEditor(app);
 			return false;

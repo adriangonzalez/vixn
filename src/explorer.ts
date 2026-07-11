@@ -1,4 +1,4 @@
-import { App, TFile, WorkspaceLeaf } from 'obsidian';
+import { App, TFile, TFolder, WorkspaceLeaf } from 'obsidian';
 import { ExplorerItem, ExplorerTree, ExplorerView } from './types';
 
 const EXPLORER_VIEW_TYPE = 'file-explorer';
@@ -8,7 +8,7 @@ export function getExplorerLeaf(app: App): WorkspaceLeaf | null {
 	return app.workspace.getLeavesOfType(EXPLORER_VIEW_TYPE)[0] ?? null;
 }
 
-function getExplorerView(app: App): ExplorerView | null {
+export function getExplorerView(app: App): ExplorerView | null {
 	return getExplorerLeaf(app)?.view ?? null;
 }
 
@@ -147,4 +147,68 @@ export async function focusExplorer(app: App): Promise<void> {
 export function focusEditor(app: App): void {
 	const leaf = app.workspace.getMostRecentLeaf(app.workspace.rootSplit);
 	if (leaf) app.workspace.setActiveLeaf(leaf, { focus: true });
+}
+
+export function focusItem(app: App, item: ExplorerItem | null): void {
+	getTree(app)?.setFocusedItem?.(item);
+}
+
+/** All items currently visible in the tree, in display order. */
+export function getVisibleItems(app: App): ExplorerItem[] {
+	const items: ExplorerItem[] = [];
+	const walk = (parent: ExplorerItem): void => {
+		for (const child of parent.vChildren?.children ?? []) {
+			if (child.info?.hidden) continue;
+			items.push(child);
+			if (child.vChildren && child.collapsed === false) walk(child);
+		}
+	};
+	const root = getTree(app)?.root;
+	if (root) walk(root);
+	return items;
+}
+
+/** zM/zR: the tree's native collapse-all / expand-all. */
+export function setAllCollapsed(app: App, collapsed: boolean): void {
+	const tree = getTree(app);
+	if (!tree?.setCollapseAll) return;
+	tree.setCollapseAll(collapsed);
+	if (!collapsed) return;
+	// The focused item may now sit inside a collapsed folder; move focus
+	// to its nearest visible ancestor, mirroring the native ArrowLeft
+	// behavior. Deferred because collapsing updates state asynchronously.
+	window.setTimeout(() => {
+		let item = getTree(app)?.focusedItem ?? null;
+		if (!item) return;
+		while (item.parent && item.parent.collapsed) item = item.parent;
+		tree.setFocusedItem?.(item);
+	}, 0);
+}
+
+/** r: start the explorer's inline rename on the focused item. */
+export function renameFocused(app: App): void {
+	getTree(app)?.handleRenameFocusedItem?.(new KeyboardEvent('keydown'));
+}
+
+/** d: the explorer's own delete flow (respects the confirm setting). */
+export function deleteFocused(app: App): void {
+	getTree(app)?.handleDeleteSelectedItems?.(new KeyboardEvent('keydown'));
+}
+
+/**
+ * a: new note in the focused folder (or the focused file's folder),
+ * created through the explorer's own flow so the title is selected for
+ * naming. Falls back to the vault's default new-file location.
+ */
+export function createNewNote(app: App): void {
+	const view = getExplorerView(app);
+	if (!view?.createAbstractFile) return;
+	const focused = getFocusedItem(app)?.file;
+	let folder: TFolder | null = null;
+	if (focused instanceof TFolder) folder = focused;
+	else if (focused instanceof TFile) folder = focused.parent;
+	folder ??= app.fileManager.getNewFileParent(
+		app.workspace.getActiveFile()?.path ?? '',
+	);
+	void view.createAbstractFile('file', folder, 'tab');
 }

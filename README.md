@@ -15,9 +15,15 @@ The keys are active only while the file explorer tree has keyboard focus — the
 | `o` | Open file, or toggle folder |
 | `gg` | Jump to the first item |
 | `G` | Jump to the last item |
+| `zM` / `zR` | Collapse all / expand all |
+| `/` | Find: type to jump to the next matching visible item; `Enter` keeps it, `Escape` goes back |
+| `n` / `N` | Repeat the last find forwards / backwards |
+| `a` | New note in the focused folder (title selected for naming) |
+| `r` | Rename the focused item inline |
+| `d` | Delete the focused item (respects the confirm-deletion setting) |
 | `Escape` | Return focus to the editor |
 
-Keys Vixn deliberately leaves native: `Enter` (rename on macOS, open on Windows/Linux), `Space` (open), `F2` (rename), and the arrow keys.
+The find searches items currently visible in the tree — expand folders (or `zR`) to search inside them. Keys Vixn deliberately leaves native: `Enter` (rename on macOS, open on Windows/Linux), `Space` (open), `F2` (rename), and the arrow keys.
 
 ## Getting into the explorer
 
@@ -26,11 +32,12 @@ Navigation only works while the explorer tree has keyboard focus. Click anywhere
 ## Settings
 
 - **Vim navigation** — master toggle for all key handling.
+- **File operations** — when off, `a`, `r`, and `d` pass through untouched, for pure navigation.
 - **Move to parent folder with h** — when off, `h` only collapses the current folder and never jumps to the parent.
 
 ## Installation
 
-Vixn is not in the community catalog yet. To install manually, copy `main.js` and `manifest.json` into:
+Vixn is not in the community catalog yet. To install manually, copy `main.js`, `manifest.json`, and `styles.css` into:
 
 ```
 <Vault>/.obsidian/plugins/vixn/
@@ -50,8 +57,9 @@ npm run lint    # ESLint with Obsidian plugin rules
 Source layout:
 
 - `src/main.ts` — plugin lifecycle and the single capture-phase key listener
-- `src/keymap.ts` — key-to-action resolution, including the `gg` sequence
-- `src/actions.ts` — navigation actions
+- `src/keymap.ts` — key-to-action resolution, including the `gg`/`zM`/`zR` sequences
+- `src/actions.ts` — navigation and file-operation actions
+- `src/find.ts` — the `/` find bar and `n`/`N` repeat
 - `src/explorer.ts` — adapter for the file explorer; all contact with undocumented internals lives here and fails soft
 - `src/types.ts` — minimal interfaces for those internals
 - `src/settings.ts` — settings tab and defaults

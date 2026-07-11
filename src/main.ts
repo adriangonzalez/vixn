@@ -1,7 +1,8 @@
 import { Plugin } from 'obsidian';
 import { DEFAULT_SETTINGS, VixnSettings, VixnSettingTab } from './settings';
-import { KeySequencer } from './keymap';
+import { FILE_OP_ACTIONS, KeySequencer } from './keymap';
 import { runAction } from './actions';
+import { FindBar } from './find';
 import {
 	ensureTreeFocus,
 	focusExplorer,
@@ -13,9 +14,12 @@ import {
 export default class VixnPlugin extends Plugin {
 	settings!: VixnSettings;
 	private keys = new KeySequencer();
+	private find!: FindBar;
 
 	async onload() {
 		await this.loadSettings();
+		this.find = new FindBar(this.app);
+		this.register(() => this.find.destroy());
 		this.addSettingTab(new VixnSettingTab(this.app, this));
 
 		this.addCommand({
@@ -54,6 +58,13 @@ export default class VixnPlugin extends Plugin {
 
 		const action = this.keys.resolve(evt.key);
 		if (action === null) return;
+		if (
+			action !== 'pending' &&
+			FILE_OP_ACTIONS.has(action) &&
+			!this.settings.fileOps
+		) {
+			return;
+		}
 		evt.preventDefault();
 		evt.stopPropagation();
 		if (action === 'pending' || !evt.target) return;
@@ -61,7 +72,13 @@ export default class VixnPlugin extends Plugin {
 		// Dispatch at the tree container itself: the event target can be a
 		// stale item element after the tree re-renders.
 		const target = getTreeContainer(this.app) ?? evt.target;
-		const keepTreeFocus = runAction(this.app, this.settings, action, target);
+		const keepTreeFocus = runAction(
+			this.app,
+			this.settings,
+			action,
+			target,
+			this.find,
+		);
 		if (keepTreeFocus) {
 			// Deferred so it runs after any focus shift or re-render caused
 			// by the native handling of the action.
