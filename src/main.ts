@@ -7,6 +7,7 @@ import {
 	focusExplorer,
 	getTreeContainer,
 	isExplorerTreeEvent,
+	isTreeClick,
 } from './explorer';
 
 export default class VixnPlugin extends Plugin {
@@ -32,6 +33,14 @@ export default class VixnPlugin extends Plugin {
 			{ capture: true },
 		);
 		this.register(() => this.keys.reset());
+
+		// Clicking the tree must also grab DOM focus for it: macOS happens
+		// to focus the container on click, but Windows/Linux do not, and
+		// the key listener only engages while focus is inside the tree.
+		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
+			if (!this.settings.enabled || !isTreeClick(evt)) return;
+			window.setTimeout(() => ensureTreeFocus(this.app), 0);
+		});
 	}
 
 	private onKeydown(evt: KeyboardEvent): void {

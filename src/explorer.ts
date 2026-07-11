@@ -40,7 +40,19 @@ export function ensureTreeFocus(app: App): void {
 
 /** True when a key event originates from the explorer's file tree (not a rename field or nav button). */
 export function isExplorerTreeEvent(evt: KeyboardEvent): boolean {
-	const target = evt.target;
+	return isTreeTarget(evt.target);
+}
+
+/**
+ * True when a click lands in the tree. Used to grab DOM focus on click:
+ * on Windows/Linux a click doesn't move focus into the container by
+ * itself, so the key listener would otherwise never engage.
+ */
+export function isTreeClick(evt: MouseEvent): boolean {
+	return isTreeTarget(evt.target);
+}
+
+function isTreeTarget(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
 	if (isEditable(target)) return false;
 	return target.closest(TREE_CONTAINER_SELECTOR) !== null;
