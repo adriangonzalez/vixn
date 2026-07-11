@@ -1,114 +1,74 @@
+import { Plugin } from 'obsidian';
+import { DEFAULT_SETTINGS, VixnSettings, VixnSettingTab } from './settings';
+import { KeySequencer } from './keymap';
+import { runAction } from './actions';
 import {
-	Editor,
-	MarkdownView,
-	MarkdownFileInfo,
-	Modal,
-	Notice,
-	Plugin,
-} from 'obsidian';
-import {
-	DEFAULT_SETTINGS,
-	MyPluginSettings,
-	SampleSettingTab,
-} from './settings';
+	ensureTreeFocus,
+	focusExplorer,
+	getTreeContainer,
+	isExplorerTreeEvent,
+} from './explorer';
 
-// Remember to rename these classes and interfaces!
-
-export default class MyPlugin extends Plugin {
-	settings!: MyPluginSettings;
+export default class VixnPlugin extends Plugin {
+	settings!: VixnSettings;
+	private keys = new KeySequencer();
 
 	async onload() {
 		await this.loadSettings();
+		this.addSettingTab(new VixnSettingTab(this.app, this));
 
-		// This creates an icon in the left ribbon.
-		this.addRibbonIcon('dice', 'Sample', (_evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status bar text');
-
-		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
-			id: 'open-modal-simple',
-			name: 'Open modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			},
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'replace-selected',
-			name: 'Replace selected content',
-			editorCallback: (
-				editor: Editor,
-				_ctx: MarkdownView | MarkdownFileInfo,
-			) => {
-				editor.replaceSelection('Sample editor command');
-			},
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-modal-complex',
-			name: 'Open modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView =
-					this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-				return false;
-			},
+			id: 'focus-file-explorer',
+			name: 'Focus file explorer',
+			callback: () => void focusExplorer(this.app),
 		});
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(activeDocument, 'click', (_evt: MouseEvent) => {
-			new Notice('Click');
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(
-			window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000),
+		// Capture phase so mapped keys are handled before the tree or any
+		// global hotkey sees them.
+		this.registerDomEvent(
+			document,
+			'keydown',
+			(evt: KeyboardEvent) => this.onKeydown(evt),
+			{ capture: true },
 		);
+		this.register(() => this.keys.reset());
 	}
 
-	onunload() {}
+	private onKeydown(evt: KeyboardEvent): void {
+		// Ignore our own synthetic events (isTrusted is false) to avoid loops.
+		if (!this.settings.enabled || !evt.isTrusted) return;
+		if (evt.ctrlKey || evt.metaKey || evt.altKey) return;
+		if (!isExplorerTreeEvent(evt)) {
+			this.keys.reset();
+			return;
+		}
+
+		const action = this.keys.resolve(evt.key);
+		if (action === null) return;
+		evt.preventDefault();
+		evt.stopPropagation();
+		if (action === 'pending' || !evt.target) return;
+
+		// Dispatch at the tree container itself: the event target can be a
+		// stale item element after the tree re-renders.
+		const target = getTreeContainer(this.app) ?? evt.target;
+		const keepTreeFocus = runAction(this.app, this.settings, action, target);
+		if (keepTreeFocus) {
+			// Deferred so it runs after any focus shift or re-render caused
+			// by the native handling of the action.
+			window.setTimeout(() => ensureTreeFocus(this.app), 0);
+		}
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(
 			{},
 			DEFAULT_SETTINGS,
-			(await this.loadData()) as Partial<MyPluginSettings>,
+			(await this.loadData()) as Partial<VixnSettings>,
 		);
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-}
-
-class SampleModal extends Modal {
-	onOpen() {
-		const { contentEl } = this;
-		contentEl.setText('Woah!');
-	}
-
-	onClose() {
-		const { contentEl } = this;
-		contentEl.empty();
 	}
 }
