@@ -130,11 +130,16 @@ function jumpFromRoot(
 	sendNavKey(target, key);
 }
 
-/** Reveal the explorer pane and give its tree keyboard focus. */
+/**
+ * Reveal the explorer pane, land the tree's focused item on the active
+ * file (expanding folders as needed), and give the tree keyboard focus.
+ */
 export async function focusExplorer(app: App): Promise<void> {
 	const leaf = getExplorerLeaf(app);
 	if (!leaf) return;
 	await app.workspace.revealLeaf(leaf);
+	const file = app.workspace.getActiveFile();
+	if (file) getExplorerView(app)?.revealInFolder?.(file);
 	ensureTreeFocus(app);
 }
 

@@ -21,7 +21,7 @@ Keys Vixn deliberately leaves native: `Enter` (rename on macOS, open on Windows/
 
 ## Getting into the explorer
 
-Navigation only works while the explorer tree has keyboard focus. Click anywhere in the file list, or use the **Vixn: Focus file explorer** command — assign it a hotkey (for example `Ctrl+Shift+E`, as in VS Code) for a fully keyboard-driven loop: jump to the explorer, navigate, open a file, and `Escape` back whenever you need the list again.
+Navigation only works while the explorer tree has keyboard focus. Click anywhere in the file list, or use the **Vixn: Focus file explorer** command — it reveals the active file (expanding folders as needed) and lands the selection on it, so you can navigate relative to where you are. Assign it a hotkey (for example `Ctrl+Shift+E`, as in VS Code) for a fully keyboard-driven loop: jump to the explorer, navigate, open a file, and `Escape` back whenever you need the list again.
 
 ## Settings
 

@@ -31,4 +31,9 @@ export interface ExplorerTree {
 
 export interface ExplorerView extends View {
 	tree?: ExplorerTree;
+	/**
+	 * Expands collapsed ancestors, sets the tree's focused item to the
+	 * file's item, and scrolls it into view on the next frame.
+	 */
+	revealInFolder?: (file: TAbstractFile) => void;
 }
