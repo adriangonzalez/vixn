@@ -1,92 +1,65 @@
-# Obsidian Sample Plugin
+# Vixn
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Vim-style keyboard navigation for the Obsidian file explorer, inspired by the explorer workflow of [VSCodeVim](https://github.com/VSCodeVim/Vim).
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+The keys are active only while the file explorer tree has keyboard focus — they never interfere with the editor, search, or renaming. Vixn doesn't reimplement tree navigation; it translates vim keys into the explorer's own native movement, so selection, scrolling, and folding all behave exactly as Obsidian intends.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+## Keymap
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open modal (simple)" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and outputs a Notice on click.
-- Registers a global interval which logs 'setInterval' to the console.
+| Key | Action |
+| --- | --- |
+| `j` | Move down |
+| `k` | Move up |
+| `h` | Collapse folder; on a file or collapsed folder, jump to the parent folder |
+| `l` | Expand folder; on a file, open it |
+| `o` | Open file, or toggle folder |
+| `gg` | Jump to the first item |
+| `G` | Jump to the last item |
+| `Escape` | Return focus to the editor |
 
-## First time developing plugins?
+Keys Vixn deliberately leaves native: `Enter` (rename on macOS, open on Windows/Linux), `Space` (open), `F2` (rename), and the arrow keys.
 
-Quick starting guide for new plugin devs:
+## Getting into the explorer
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `src/main.ts` to `main.js`.
-- Make changes to `src/main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+Navigation only works while the explorer tree has keyboard focus. Click anywhere in the file list, or use the **Vixn: Focus file explorer** command — assign it a hotkey (for example `Ctrl+Shift+E`, as in VS Code) for a fully keyboard-driven loop: jump to the explorer, navigate, open a file, and `Escape` back whenever you need the list again.
 
-## Releasing new releases
+## Settings
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+- **Vim navigation** — master toggle for all key handling.
+- **Move to parent folder with h** — when off, `h` only collapses the current folder and never jumps to the parent.
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Installation
 
-## Adding your plugin to the community plugin list
+Vixn is not in the community catalog yet. To install manually, copy `main.js` and `manifest.json` into:
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
-
-## How to use
-
-- Clone this repo.
-- Make sure your NodeJS is at least v18 (`node --version`).
-- `npm i` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
-
-## Manually installing the plugin
-
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
-
-## Improve code quality with eslint
-
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- This project already has eslint preconfigured, you can invoke a check by running`npm run lint`
-- Together with a custom eslint [plugin](https://github.com/obsidianmd/eslint-plugin) for Obsidan specific code guidelines.
-- A GitHub action is preconfigured to automatically lint every commit on all branches.
-
-## Funding URL
-
-You can include funding URLs where people who use your plugin can financially support it.
-
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
-
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
+```
+<Vault>/.obsidian/plugins/vixn/
 ```
 
-If you have multiple URLs, you can also do:
+Then reload Obsidian and enable **Vixn** in **Settings → Community plugins**.
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
+## Development
+
+```bash
+npm install
+npm run dev     # watch mode, rebuilds main.js on change
+npm run build   # type-check + production build
+npm run lint    # ESLint with Obsidian plugin rules
 ```
 
-## API Documentation
+Source layout:
 
-See https://docs.obsidian.md
+- `src/main.ts` — plugin lifecycle and the single capture-phase key listener
+- `src/keymap.ts` — key-to-action resolution, including the `gg` sequence
+- `src/actions.ts` — navigation actions
+- `src/explorer.ts` — adapter for the file explorer; all contact with undocumented internals lives here and fails soft
+- `src/types.ts` — minimal interfaces for those internals
+- `src/settings.ts` — settings tab and defaults
+
+### A note on internals
+
+The file explorer has no public API. Movement works through synthetic arrow-key events handled by Obsidian's own tree navigation, which keeps coupling low; only the `gg`/`G` jumps and the smart `h`/`l` behaviors read internal tree state. If a future Obsidian release changes those internals, the affected keys degrade to doing nothing rather than breaking the plugin.
+
+## Requirements
+
+Requires Obsidian 1.7.2 or later. Works on desktop and mobile (though it is only useful with a physical keyboard).
