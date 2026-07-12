@@ -172,6 +172,10 @@ export function getVisibleItems(app: App): ExplorerItem[] {
 export function setAllCollapsed(app: App, collapsed: boolean): void {
 	const tree = getTree(app);
 	if (!tree?.setCollapseAll) return;
+	// setCollapseAll no-ops when its cached isAllCollapsed flag already
+	// matches, and that cache goes stale (only the header button updates
+	// it) — force it to the opposite so the call always takes effect.
+	tree.isAllCollapsed = !collapsed;
 	tree.setCollapseAll(collapsed);
 	if (!collapsed) return;
 	// The focused item may now sit inside a collapsed folder; move focus

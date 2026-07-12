@@ -33,6 +33,12 @@ export interface ExplorerTree {
 	 */
 	root?: ExplorerItem;
 	setCollapseAll?: (collapsed: boolean) => void;
+	/**
+	 * setCollapseAll's no-op guard compares against this cached flag, which
+	 * goes stale when folders are toggled individually — reset it before
+	 * calling setCollapseAll with an absolute value.
+	 */
+	isAllCollapsed?: boolean;
 	/** Bound view callback behind the native F2/Enter rename key. */
 	handleRenameFocusedItem?: (evt: KeyboardEvent) => void;
 	/**

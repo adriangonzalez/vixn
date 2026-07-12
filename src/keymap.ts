@@ -35,6 +35,17 @@ export class KeySequencer {
 	 * sequence (consume it and wait for the next key), or null when unmapped.
 	 */
 	resolve(key: string): VixnAction | 'pending' | null {
+		// A bare modifier press (e.g. the Shift of zM's M) must not
+		// consume or cancel a pending sequence.
+		if (
+			key === 'Shift' ||
+			key === 'Control' ||
+			key === 'Alt' ||
+			key === 'Meta' ||
+			key === 'CapsLock'
+		) {
+			return null;
+		}
 		if (this.pending !== null) {
 			const pending = this.pending;
 			this.reset();
