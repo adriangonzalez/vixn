@@ -13,6 +13,7 @@ import {
 	isFolderItem,
 	openFocusedFile,
 	renameFocused,
+	revealFocusedInSystem,
 	sendNavKey,
 	setAllCollapsed,
 } from './explorer';
@@ -73,6 +74,11 @@ export function runAction(
 		case 'delete':
 			deleteFocused(app);
 			return false;
+		case 'reveal':
+			// Opens the OS file manager in a separate app; keep tree focus so
+			// returning to Obsidian lands back on the same item.
+			revealFocusedInSystem(app);
+			return true;
 		case 'focusEditor':
 			focusEditor(app);
 			return false;

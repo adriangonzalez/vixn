@@ -1,5 +1,5 @@
-import { App, TFile, TFolder, WorkspaceLeaf } from 'obsidian';
-import { ExplorerItem, ExplorerTree, ExplorerView } from './types';
+import { App, Platform, TFile, TFolder, WorkspaceLeaf } from 'obsidian';
+import { ExplorerItem, ExplorerTree, ExplorerView, RevealApp } from './types';
 
 const EXPLORER_VIEW_TYPE = 'file-explorer';
 const TREE_CONTAINER_SELECTOR = '.nav-files-container';
@@ -197,6 +197,14 @@ export function renameFocused(app: App): void {
 /** d: the explorer's own delete flow (respects the confirm setting). */
 export function deleteFocused(app: App): void {
 	getTree(app)?.handleDeleteSelectedItems?.(new KeyboardEvent('keydown'));
+}
+
+/** x: reveal the focused item in the OS file manager (desktop only). */
+export function revealFocusedInSystem(app: App): void {
+	if (!Platform.isDesktopApp) return;
+	const file = getFocusedItem(app)?.file;
+	if (!file) return;
+	(app as RevealApp).showInFolder?.(file.path);
 }
 
 /**

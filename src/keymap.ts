@@ -14,6 +14,7 @@ export type VixnAction =
 	| 'newNote'
 	| 'rename'
 	| 'delete'
+	| 'reveal'
 	| 'focusEditor';
 
 /** Actions gated behind the "File operations" setting. */
@@ -81,6 +82,8 @@ export class KeySequencer {
 				return 'rename';
 			case 'd':
 				return 'delete';
+			case 'x':
+				return 'reveal';
 			case 'g':
 			case 'z':
 				this.startSequence(key);

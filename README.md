@@ -21,6 +21,7 @@ The keys are active only while the file explorer tree has keyboard focus — the
 | `a` | New note in the focused folder (title selected for naming) |
 | `r` | Rename the focused item inline |
 | `d` | Delete the focused item (respects the confirm-deletion setting) |
+| `x` | Reveal the focused item in Finder / the system file explorer (desktop only) |
 | `Escape` | Return focus to the editor |
 
 The find searches items currently visible in the tree — expand folders (or `zR`) to search inside them. Keys Vixn deliberately leaves native: `Enter` (rename on macOS, open on Windows/Linux), `Space` (open), `F2` (rename), and the arrow keys.

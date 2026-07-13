@@ -48,6 +48,15 @@ export interface ExplorerTree {
 	handleDeleteSelectedItems?: (evt: KeyboardEvent) => void;
 }
 
+export interface RevealApp {
+	/**
+	 * Reveals a vault-relative path in the OS file manager (Finder on macOS,
+	 * File Explorer elsewhere). Desktop only; the public method behind the
+	 * explorer's "Reveal in Finder" / "Show in system explorer" menu item.
+	 */
+	showInFolder?: (path: string) => void;
+}
+
 export interface ExplorerView extends View {
 	tree?: ExplorerTree;
 	/**
