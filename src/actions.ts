@@ -15,6 +15,7 @@ import {
 	renameFocused,
 	revealFocusedInSystem,
 	sendNavKey,
+	sendPreviewNavKey,
 	setAllCollapsed,
 } from './explorer';
 
@@ -36,6 +37,12 @@ export function runAction(
 			return true;
 		case 'up':
 			sendNavKey(target, 'ArrowUp');
+			return true;
+		case 'previewDown':
+			sendPreviewNavKey(target, 'ArrowDown');
+			return true;
+		case 'previewUp':
+			sendPreviewNavKey(target, 'ArrowUp');
 			return true;
 		case 'collapseOrParent':
 			collapseOrParent(app, settings, target);

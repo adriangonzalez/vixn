@@ -15,6 +15,8 @@ export type VixnAction =
 	| 'rename'
 	| 'delete'
 	| 'reveal'
+	| 'previewDown'
+	| 'previewUp'
 	| 'focusEditor';
 
 /** Actions gated behind the "File operations" setting. */
@@ -60,6 +62,10 @@ export class KeySequencer {
 				return 'down';
 			case 'k':
 				return 'up';
+			case 'J':
+				return 'previewDown';
+			case 'K':
+				return 'previewUp';
 			case 'h':
 				return 'collapseOrParent';
 			case 'l':

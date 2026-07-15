@@ -199,6 +199,30 @@ export function deleteFocused(app: App): void {
 	getTree(app)?.handleDeleteSelectedItems?.(new KeyboardEvent('keydown'));
 }
 
+/**
+ * J/K: dispatch the tree's native Mod+Arrow, which moves the selection and
+ * background-opens the focused file — all inside the tree's own handler, so
+ * its keyboard scope stays intact. (Opening via the workspace API instead
+ * switches the active scope and silently kills further navigation.) On a
+ * folder the native handler just moves, matching plain j/k.
+ */
+export function sendPreviewNavKey(
+	target: EventTarget,
+	key: 'ArrowUp' | 'ArrowDown',
+): void {
+	// "Mod" is Cmd on macOS, Ctrl elsewhere — match what isModEvent checks.
+	const mod = Platform.isMacOS ? { metaKey: true } : { ctrlKey: true };
+	target.dispatchEvent(
+		new KeyboardEvent('keydown', {
+			key,
+			code: key,
+			bubbles: true,
+			cancelable: true,
+			...mod,
+		}),
+	);
+}
+
 /** x: reveal the focused item in the OS file manager (desktop only). */
 export function revealFocusedInSystem(app: App): void {
 	if (!Platform.isDesktopApp) return;

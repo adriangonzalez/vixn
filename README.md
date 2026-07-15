@@ -10,9 +10,11 @@ The keys are active only while the file explorer tree has keyboard focus — the
 | --- | --- |
 | `j` | Move down |
 | `k` | Move up |
+| `J` / `K` | Move down / up and open the focused file in the background — flip through to preview a folder's files without leaving the explorer |
 | `h` | Collapse folder; on a file or collapsed folder, jump to the parent folder |
 | `l` | Expand folder; on a file, open it |
 | `o` | Open file, or toggle folder |
+| `p` | Toggle a hover preview of the focused file (like Ctrl/Cmd-hover; needs the core Page preview plugin) |
 | `gg` | Jump to the first item |
 | `G` | Jump to the last item |
 | `zM` / `zR` | Collapse all / expand all |
